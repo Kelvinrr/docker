@@ -13,19 +13,11 @@ services:
     container_name: "${COMPOSE_PROJECT_NAME:-citus}_master"
     image: 'kelvinrr/postgis-citus'
     ports: ["55432:5432"]
-    labels: ['com.citusdata.role=Master']
+    labels: ['com.citusdata.role=Master', 'com.docker.compose.project=whatever']
     networks:
       - postgis_dist
     volumes:
       - master:/var/lib/postgresql/data   
-
-  worker:
-    image: 'kelvinrr/postgis-citus'
-    labels: ['com.citusdata.role=Worker']
-    networks:
-      - postgis_dist
-    volumes:
-      - worker:/var/lib/postgresql/data
 
   manager:
     container_name: "${COMPOSE_PROJECT_NAME:-citus}_manager"
@@ -33,6 +25,17 @@ services:
     volumes: ['/var/run/docker.sock:/var/run/docker.sock']
     environment:
       - CITUS_HOST:master.1
-    labels: ['com.citusdata.project=whatever']
+    labels: ['com.docker.compose.project=whatever']
     networks:
       - postgis_dist
+    deploy:
+      mode: global
+
+  worker:
+    image: 'kelvinrr/postgis-citus'
+    labels: ['com.citusdata.role=Worker', 'com.docker.compose.project=whatever']
+    networks:
+      - postgis_dist
+    volumes:
+      - worker:/var/lib/postgresql/data
+
