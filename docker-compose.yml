@@ -1,4 +1,12 @@
-version: '2.1'
+version: '3'
+
+networks:
+  postgis_dist:
+    driver: overlay
+
+volumes:
+  master:
+  worker:
 
 services:
   master:
@@ -6,10 +14,25 @@ services:
     image: 'kelvinrr/postgis-citus'
     ports: ["55432:5432"]
     labels: ['com.citusdata.role=Master']
+    networks:
+      - postgis_dist
+    volumes:
+      - master:/var/lib/postgresql/data   
+
   worker:
     image: 'kelvinrr/postgis-citus'
     labels: ['com.citusdata.role=Worker']
+    networks:
+      - postgis_dist
+    volumes:
+      - worker:/var/lib/postgresql/data
+
   manager:
     container_name: "${COMPOSE_PROJECT_NAME:-citus}_manager"
     image: 'citusdata/membership-manager:0.2.0'
     volumes: ['/var/run/docker.sock:/var/run/docker.sock']
+    environment:
+      - CITUS_HOST:master.1
+    labels: ['com.citusdata.project=whatever']
+    networks:
+      - postgis_dist
