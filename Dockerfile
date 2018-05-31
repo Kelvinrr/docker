@@ -1,4 +1,4 @@
-FROM postgres:10.3
+FROM mdillon/postgis:10
 ARG VERSION=7.4.0
 LABEL maintainer="Citus Data https://citusdata.com" \
       org.label-schema.name="Citus" \
