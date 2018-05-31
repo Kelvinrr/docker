@@ -6,10 +6,11 @@ version: '3'
 #
 # - The docker api used by the mamanger relies on events for auto adding of workers to master, 
 #   but the api only gets events from the node it is on. Temporary solution: change deploy mode to 
-#   global so all nodes have a worker 
+#   global so all nodes have a manager 
 # 
 # - If a worker is stood up before the mamanger starts to look for workers, the worker may not be added, 
-#   temporary solution is to scale workers to 0 and back to a normal scale 
+#   temporary solution is to scale workers to 0 and back to a normal scale. Better solution: update manager 
+#   with a smarter protocol for adding workers. 
 
 networks:
   postgis_dist:
