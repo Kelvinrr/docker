@@ -1,5 +1,16 @@
 version: '3'
 
+# NOTES:
+# - All services must run the same project, docker swarm doesn't seem to automatically 
+#   assign project names
+#
+# - The docker api used by the mamanger relies on events for auto adding of workers to master, 
+#   but the api only gets events from the node it is on. Temporary solution: change deploy mode to 
+#   global so all nodes have a worker 
+# 
+# - If a worker is stood up before the mamanger starts to look for workers, the worker may not be added, 
+#   temporary solution is to scale workers to 0 and back to a normal scale 
+
 networks:
   postgis_dist:
     driver: overlay
@@ -10,22 +21,20 @@ volumes:
 
 services:
   master:
-    container_name: "${COMPOSE_PROJECT_NAME:-citus}_master"
     image: 'kelvinrr/postgis-citus'
     ports: ["55432:5432"]
-    labels: ['com.citusdata.role=Master', 'com.docker.compose.project=whatever']
+    labels: ['com.citusdata.role=Master', 'com.docker.compose.project=postis-citus']
     networks:
       - postgis_dist
     volumes:
       - master:/var/lib/postgresql/data   
 
   manager:
-    container_name: "${COMPOSE_PROJECT_NAME:-citus}_manager"
     image: 'citusdata/membership-manager:0.2.0'
     volumes: ['/var/run/docker.sock:/var/run/docker.sock']
     environment:
       - CITUS_HOST:master.1
-    labels: ['com.docker.compose.project=whatever']
+    labels: ['com.docker.compose.project=postgis-citus']
     networks:
       - postgis_dist
     deploy:
@@ -33,7 +42,7 @@ services:
 
   worker:
     image: 'kelvinrr/postgis-citus'
-    labels: ['com.citusdata.role=Worker', 'com.docker.compose.project=whatever']
+    labels: ['com.citusdata.role=Worker', 'com.docker.compose.project=postgis-citus']
     networks:
       - postgis_dist
     volumes:
