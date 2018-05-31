@@ -2,15 +2,15 @@ version: '3'
 
 # NOTES:
 # - All services must run the same project, docker swarm doesn't seem to automatically 
-#   assign project names
+#   assign project names. Manager filters events on project name to detect workers and add them to master. 
 #
-# - The docker api used by the mamanger relies on events for auto adding of workers to master, 
-#   but the api only gets events from the node it is on. Temporary solution: change deploy mode to 
-#   global so all nodes have a manager 
+# - Docker python API only gets events from the node it is on. Temporary solution: change deploy mode to 
+#   global so all nodes have a manager. Better solution: single manager node which gets events from all swarm nodes, 
+#   solution seems non obvious and the temp fix was easy enough. 
 # 
-# - If a worker is stood up before the mamanger starts to look for workers, the worker may not be added, 
-#   temporary solution is to scale workers to 0 and back to a normal scale. Better solution: update manager 
-#   with a smarter protocol for adding workers. 
+# - If a worker is stood up before the mananger starts to look for workers, the worker may not be added 
+#   (depends_on is ignored on compose 3), temporary solution is to scale workers to 0 and back to a normal
+#   scale. Better solution: update manager with a smarter protocol for adding workers. 
 
 networks:
   postgis_dist:
