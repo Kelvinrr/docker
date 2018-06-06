@@ -3,8 +3,10 @@ INSERT into spatial_ref_sys (srid, auth_name, auth_srid, proj4text, srtext) valu
 
 DROP TABLE spectra;
 DROP TABLE datatype;
-DROP TABLE filelookups;
-DROP TABLE filemetadata;
+DROP TABLE filelookups CASCADE;
+DROP TABLE filemetadata CASCADE;
+DROP TABLE ref1;
+DROP TABLE ref2;
 
 CREATE TABLE filemetadata (
 	  file_id SERIAL primary key,
@@ -18,23 +20,32 @@ CREATE TABLE filelookups (
 	  observation_id SMALLINT,
 	  incidence DOUBLE PRECISION,
 	  emission DOUBLE PRECISION,
-	  location GEOMETRY(POINT, 30100),
 	  PRIMARY KEY (file_id, observation_id)
 );
 
--- SRID 30100 is for the Moon
--- SELECT AddGeometryColumn ('public','filelookups','location',30100,'POINT',2, false);
+-- SRID 930100 is for the Moon
+SELECT AddGeometryColumn ('public', 'filelookups', 'location', 930100, 'POINT', 2, false);
 
-CREATE TABLE datatype (
-	  type_id SERIAL PRIMARY KEY,
-	  type VARCHAR (16)
-);
-
-CREATE TABLE spectra (
-	  spectra_id BIGSERIAL PRIMARY KEY,
+-- type should be enum
+CREATE TABLE ref1 (
 	  file_id INTEGER,
-	  observation_id SMALLINT,
-	  type_id INTEGER REFERENCES datatype (type_id),
+		observation_id SMALLINT,
+	  spectra_id BIGSERIAL,
 	  spectra DOUBLE PRECISION[],
-	  FOREIGN KEY (file_id, observation_id) REFERENCES filelookups (file_id, observation_id)
+		FOREIGN KEY (file_id, observation_id) REFERENCES filelookups (file_id, observation_id)
 );
+
+-- type should be enum
+CREATE TABLE ref2 (
+	  file_id INTEGER,
+		observation_id SMALLINT,
+	  spectra_id BIGSERIAL,
+	  spectra DOUBLE PRECISION[],
+		FOREIGN KEY (file_id, observation_id) REFERENCES filelookups (file_id, observation_id)
+);
+
+-- shard everything together
+SELECT create_distributed_table('filemetadata', 'file_id');
+SELECT create_distributed_table('filelookups', 'file_id');
+SELECT create_distributed_table('ref1', 'file_id');
+SELECT create_distributed_table('ref2', 'file_id');
